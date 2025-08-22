@@ -2,6 +2,13 @@ from __future__ import annotations
 import pandas as pd
 import numpy as np
 
+def _ensure_series(col) -> pd.Series:
+    """Return a 1D Series even if col is a DataFrame."""
+    if isinstance(col, pd.DataFrame):
+        # take the first column if a 2D frame sneaks in
+        return col.iloc[:, 0]
+    return col
+
 def make_features_and_labels(prices: pd.DataFrame) -> pd.DataFrame:
     """
     Minimal, leakage-safe features + next-day direction label.
@@ -9,26 +16,33 @@ def make_features_and_labels(prices: pd.DataFrame) -> pd.DataFrame:
     """
     df = prices.copy()
 
-    # Basic returns
-    df["r1"] = df["Close"].pct_change(1)
+    # Ensure core columns are 1D series
+    close = _ensure_series(df["Close"]).astype(float)
+    volume = _ensure_series(df["Volume"]).astype(float)
 
-    # Moving averages
-    df["SMA_5"]  = df["Close"].rolling(5,  min_periods=5).mean()
-    df["SMA_10"] = df["Close"].rolling(10, min_periods=10).mean()
-    df["SMA_gap"] = (df["SMA_5"] - df["SMA_10"]) / df["Close"]
+    # Basic returns
+    df["r1"] = close.pct_change(1)
+
+    # Moving averages (force Series arithmetic)
+    sma5  = close.rolling(5,  min_periods=5).mean()
+    sma10 = close.rolling(10, min_periods=10).mean()
+    df["SMA_5"]  = sma5
+    df["SMA_10"] = sma10
+    df["SMA_gap"] = (sma5 - sma10) / close
 
     # Volatility features
-    df["Vol_10"] = df["r1"].rolling(10, min_periods=10).std()
-    df["Vol_chg"] = df["Vol_10"] / df["Vol_10"].shift(10) - 1
+    vol10 = df["r1"].rolling(10, min_periods=10).std()
+    df["Vol_10"]  = vol10
+    df["Vol_chg"] = vol10 / vol10.shift(10) - 1
 
     # Volume z-score (10-day)
-    vol_mean_10 = df["Volume"].rolling(10, min_periods=10).mean()
-    vol_std_10  = df["Volume"].rolling(10, min_periods=10).std()
-    df["Volume_z10"] = (df["Volume"] - vol_mean_10) / vol_std_10
+    vol_mean_10 = volume.rolling(10, min_periods=10).mean()
+    vol_std_10  = volume.rolling(10, min_periods=10).std()
+    df["Volume_z10"] = (volume - vol_mean_10) / vol_std_10
 
     # Label: Up tomorrow?
-    close_fwd = df["Close"].shift(-1)
-    df["y"] = (close_fwd > df["Close"]).astype(int)
+    close_fwd = close.shift(-1)
+    df["y"] = (close_fwd > close).astype(int)
 
     # Drop warm-up & last row (no future label)
     df = df.dropna().copy()
