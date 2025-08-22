@@ -98,3 +98,21 @@ Walk-forward CV; probability thresholds; calibration.
 Compare SVM/RandomForest/XGBoost.
 Streamlit dashboard; FastAPI endpoint.
 Dockerfile + GitHub Actions.
+
+15) Running:
+pyenv install 3.11.9
+pyenv local 3.11.9
+
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+python -m pip install --upgrade pip setuptools wheel
+
+pip install -r requirements.txt
+
+# sanity check
+python scripts/train.py --ticker AAPL --start 2022-01-01 --end 2024-12-31 \
+  --train-end 2023-06-30 --val-end 2023-12-31
+
+# full first run
+python scripts/train.py --ticker AAPL --start 2015-01-01 --end 2024-12-31 \
+  --train-end 2021-12-31 --val-end 2022-12-30
