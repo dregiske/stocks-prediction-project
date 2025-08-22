@@ -1,30 +1,32 @@
-1) Outline
+# 1. Outline
 Predict tomorrow’s direction of a stock (Up = close_{t+1} > close_t, Down otherwise) using daily OHLCV data and a few time-aware features. Evaluate with temporal splits and a tiny backtest to show practical impact.
 
-2) Scope & Assumptions
-Universe: 1–3 large-cap tickers (e.g., AAPL, MSFT).
-Horizon: Next trading day (t → t+1).
-Frequency: Daily.
-Educational only (not financial advice). No intraday, no leverage, no shorting in MVP.
+# 2. Scope & Assumptions
+- Universe: 1–3 large-cap tickers (e.g., AAPL, MSFT).
+- Horizon: Next trading day (t → t+1).
+- Frequency: Daily.
+- Educational only (not financial advice). No intraday, no leverage, no shorting in MVP.
 
-3) Tech Stack (MVP)
-Python 3.10+
-pandas, numpy (data)
-scikit-learn (models, pipeline, metrics)
-yfinance (data source)
-matplotlib (plots)
+# 3. Tech Stack (MVP)
+1. Python 3.10+
+2. pandas, numpy (data)
+3. scikit-learn (models, pipeline, metrics)
+4. yfinance (data source)
+5. matplotlib (plots)
 
-4) Data Ingestion (MVP)
-Pull daily OHLCV from yfinance for a fixed window (e.g., 2015-01-01 → 2024-12-31)
-Keep columns: Date, Open, High, Low, Close, Volume.
-Handle missing rows/dates; forward-fill if needed; drop leading NA after rolling features.
+# 4. Data Ingestion (MVP)
+- Pull daily OHLCV from yfinance for a fixed window
+- Keep columns: Date, Open, High, Low, Close, Volume.
+- Handle missing rows/dates; forward-fill if needed; drop leading NA after rolling features.
 
-5) Labeling
+# 5. Labeling
+```
 y_t = 1 if Close[t+1] > Close[t] else 0.
-Shift labels so features at time t predict label at t+1.
-Drop last row (no future label).
+```
+- Shift labels so features at time t predict label at t+1.
+- Drop last row (no future label).
 
-6) Minimal Feature Set (no leakage)
+# 6. Minimal Feature Set (no leakage)
 Compute all with rolling windows; drop rows with NA from window warmups:
 r1: 1-day return = Close.pct_change(1).
 SMA_5, SMA_10: simple moving averages of Close.
@@ -37,7 +39,7 @@ Keep it tiny at first (5–7 features). Add RSI/MACD later if needed.
 7) Baseline & Models (keep small)
 Baseline: predict majority class (always Up). Report accuracy for context.
 Model 1: Logistic Regression (Pipeline: StandardScaler → LogReg(C=1.0, class_weight=None)).
-Model 2 (optional for V2): RandomForest (no scaling needed) or SVM(RBF).
+Model 2: (optional for V2): RandomForest (no scaling needed) or SVM(RBF).
 
 8) Time-Aware Validation
 Holdout split by date (simple and clear):
@@ -116,3 +118,27 @@ python scripts/train.py --ticker AAPL --start 2022-01-01 --end 2024-12-31 \
 # full first run
 python scripts/train.py --ticker AAPL --start 2015-01-01 --end 2024-12-31 \
   --train-end 2021-12-31 --val-end 2022-12-30
+
+16) Overlook
+yfinance → load_prices()
+        → prices DataFrame (Date index, OHLCV)
+
+prices → make_features_and_labels()
+       → features+label DataFrame (Date index; columns: r1, SMA_5, …, y)
+
+features → time_range_split()
+         → train_df, val_df, test_df
+
+{train,val,test}_df → split_X_y()
+                   → X_train, y_train, X_val, y_val, X_test, y_test
+
+X_train,y_train → make_logreg_pipeline() → fit_and_eval()
+                         ↓                         ↓
+                 scikit-learn Pipeline     test probabilities (y_prob_test),
+                      (scaler+model)       metrics (val & test), fitted model
+
+(prices, y_test, y_prob_test, X_test.index) → backtest_long_only() → equity curves
+equity curves → summarize_backtest()
+
+metrics + backtest summary → save_json()
+plots → plot_confusion(), plot_equity()
