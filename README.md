@@ -36,37 +36,38 @@ Vol_chg: Vol_10 / Vol_10.shift(10) - 1 (stability signal).
 Volume_z10: z-score of volume over 10 days.
 Keep it tiny at first (5–7 features). Add RSI/MACD later if needed.
 
-7) Baseline & Models (keep small)
+# 7. Baseline & Models (keep small)
 Baseline: predict majority class (always Up). Report accuracy for context.
 Model 1: Logistic Regression (Pipeline: StandardScaler → LogReg(C=1.0, class_weight=None)).
 Model 2: (optional for V2): RandomForest (no scaling needed) or SVM(RBF).
 
-8) Time-Aware Validation
-Holdout split by date (simple and clear):
-Train: 2015–2021
-Val: 2022
-Test: 2023–2024
-Scale inside each fit (use scikit-learn Pipeline).
-Later (V2): expanding-window walk-forward CV.
+# 8. Time-Aware Validation
+- Holdout split by date (simple and clear):
+- Train: 2015–2021
+- Val: 2022
+- Test: 2023–2024
+- Scale inside each fit (use scikit-learn Pipeline).
+- Later (V2): expanding-window walk-forward CV.
 
-9) Metrics (report just the essentials)
-Accuracy, F1 (positive = Up), MCC (handles imbalance better).
-Confusion Matrix on the test period.
-(Optional V2) ROC-AUC and precision-recall.
+# 9. Metrics (report just the essentials)
+- Accuracy, F1 (positive = Up), MCC (handles imbalance better).
+- Confusion Matrix on the test period.
+- (Optional V2) ROC-AUC and precision-recall.
 
-10) Tiny Backtest (toy, for illustration)
-Rule: if P(Up) ≥ 0.5 (or class=Up), go long for next day; else stay in cash.
-Compute strategy daily returns and cumulative return.
-Compare against Buy & Hold over the test window.
-Show equity curve plot (two lines: strategy vs. B&H).
-(V2) Add simple transaction cost (e.g., 5 bps) and a threshold (e.g., trade only if P(Up) ≥ 0.55).
+# 10. Tiny Backtest (toy, for illustration)
+- Rule: if P(Up) ≥ 0.5 (or class=Up), go long for next day; else stay in cash.
+- Compute strategy daily returns and cumulative return.
+- Compare against Buy & Hold over the test window.
+- Show equity curve plot (two lines: strategy vs. B&H).
+- (V2) Add simple transaction cost (e.g., 5 bps) and a threshold (e.g., trade only if P(Up) ≥ 0.55).
 
-11) Plots (MVP)
-Price with buy/sit-out markers for the test period.
-Confusion matrix.
-Equity curve vs. buy-and-hold.
+# 11. Plots (MVP)
+- Price with buy/sit-out markers for the test period.
+- Confusion matrix.
+- Equity curve vs. buy-and-hold.
 
-12) Repo Structure
+# 12. Repo Structure
+```
 stock-trend-ml/
 ├─ README.md
 ├─ requirements.txt           # pandas, numpy, scikit-learn, yfinance, matplotlib
@@ -87,39 +88,42 @@ stock-trend-ml/
    ├─ metrics.json
    ├─ confusion_matrix.png
    └─ equity_curve.png
+```
 
-13) Minimal Execution Flow
-python scripts/train.py --ticker AAPL --start 2015-01-01 --end 2024-12-31
-Saves metrics.json, model artifact (optional), and validation results.
-python scripts/backtest.py --ticker AAPL --test-start 2023-01-01 --test-end 2024-12-31
-Produces equity_curve.png and summary stats.
+13) Next Steps (only after MVP)
+- Add RSI/MACD and permutation importance.
+- Walk-forward CV; probability thresholds; calibration.
+- Compare SVM/RandomForest/XGBoost.
+- Streamlit dashboard; FastAPI endpoint.
+- Dockerfile + GitHub Actions.
 
-14) Next Steps (only after MVP)
-Add RSI/MACD and permutation importance.
-Walk-forward CV; probability thresholds; calibration.
-Compare SVM/RandomForest/XGBoost.
-Streamlit dashboard; FastAPI endpoint.
-Dockerfile + GitHub Actions.
-
-15) Running:
-# start environment
+# 15. Running:
+1) start environment
+```
 python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+source .venv/bin/activate		# Windows: .venv\Scripts\activate
 python -m pip install --upgrade pip setuptools wheel
+```
 
-# install dependencies
+2) install dependencies
+```
 pip install --upgrade pip
 pip install -r requirements.txt
+```
 
-# sanity check
+3) sanity check
+```
 python scripts/train.py --ticker AAPL --start 2022-01-01 --end 2024-12-31 \
   --train-end 2023-06-30 --val-end 2023-12-31
-
-# full first run
+```
+4) full first run
+```
 python scripts/train.py --ticker AAPL --start 2015-01-01 --end 2024-12-31 \
   --train-end 2021-12-31 --val-end 2022-12-30
+```
 
 16) Overlook
+```
 yfinance → load_prices()
         → prices DataFrame (Date index, OHLCV)
 
@@ -142,3 +146,4 @@ equity curves → summarize_backtest()
 
 metrics + backtest summary → save_json()
 plots → plot_confusion(), plot_equity()
+```
