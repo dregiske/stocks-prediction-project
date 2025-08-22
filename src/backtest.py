@@ -3,7 +3,10 @@ import numpy as np
 import pandas as pd
 
 def _ensure_series(x) -> pd.Series:
-    """Return a 1D Series (handles accidental 2D arrays/frames)."""
+    """
+    Return a 1D series
+    (handle accidental 2D arrays/frames).
+    """
     if isinstance(x, pd.DataFrame):
         return x.iloc[:, 0]
     if isinstance(x, np.ndarray):

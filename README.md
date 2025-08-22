@@ -82,8 +82,7 @@ stock-trend-ml/
 │  ├─ backtest.py             # simple strategy & equity curve
 │  └─ utils.py                # common helpers (metrics, plotting)
 ├─ scripts/
-│  ├─ train.py                # end-to-end: load → featurize → fit → evaluate
-│  └─ backtest.py             # run backtest on test set; save plots
+│  └─ train.py                # end-to-end: load → featurize → fit → evaluate
 └─ outputs/
    ├─ metrics.json
    ├─ confusion_matrix.png
@@ -100,7 +99,7 @@ stock-trend-ml/
 # 15. Running:
 1) start environment
 ```
-python -m venv .venv
+python3.11 -m venv .venv
 source .venv/bin/activate		# Windows: .venv\Scripts\activate
 python -m pip install --upgrade pip setuptools wheel
 ```
@@ -110,17 +109,10 @@ python -m pip install --upgrade pip setuptools wheel
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
-
-3) sanity check
-```
-python scripts/train.py --ticker AAPL --start 2022-01-01 --end 2024-12-31 \
-  --train-end 2023-06-30 --val-end 2023-12-31
-```
-4) full first run
-```
-python scripts/train.py --ticker AAPL --start 2015-01-01 --end 2024-12-31 \
+3) run program
+rm data/AAPL_2018-01-01_2024-12-31.csv 2>/dev/null || true
+python -m scripts.train --ticker AAPL --start 2018-01-01 --end 2024-12-31 \
   --train-end 2021-12-31 --val-end 2022-12-30
-```
 
 16) Overlook
 ```
