@@ -100,13 +100,13 @@ Streamlit dashboard; FastAPI endpoint.
 Dockerfile + GitHub Actions.
 
 15) Running:
-pyenv install 3.11.9
-pyenv local 3.11.9
-
+# start environment
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 python -m pip install --upgrade pip setuptools wheel
 
+# install dependencies
+pip install --upgrade pip
 pip install -r requirements.txt
 
 # sanity check
